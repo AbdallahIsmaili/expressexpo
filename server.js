@@ -5,7 +5,7 @@ const PORT = 3000,
   jwt = require("jsonwebtoken"),
   bodyParser = require("body-parser"),
   userRouter = require("./Routes/userRouter"),
-  //bookRouter = require("./Routes/bookRouter"),
+  bookRouter = require("./Routes/bookRouter"),
   app = express();
 
 const auth = async (req, res, next) => {
@@ -28,6 +28,6 @@ app.use(bodyParser.json());
 
 app.use("/user", userRouter);
 
-// app.use("/book", auth, bookRouter);
+app.use("/book", auth, bookRouter);
 
 app.listen(PORT, () => console.log(`Library server is running in port:${PORT}`));
