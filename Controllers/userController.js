@@ -56,8 +56,40 @@ const login = async (req, res) => {
 };
 
 
+const user = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'Accès non autorisé' });
+    }
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+
+    const user = await User.findOne({ id: decoded.id });
+    if (!user) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    res.status(200).json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    });
+
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: 'Token invalide' });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Token expiré' });
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
 
 module.exports = {
   register,
   login,
+  user
 };
