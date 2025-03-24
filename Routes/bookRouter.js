@@ -23,6 +23,12 @@ const limiter = rateLimit({
   windowMs: 10 * 1000, // 10 secondes
   max: 5, // 5 requêtes max
   message: "Trop de requêtes, veuillez réessayer plus tard.",
+  headers: true, 
+  keyGenerator: (req) => req.ip, 
+  handler: (req, res, next) => {
+    res.setHeader('Retry-After', 10); 
+    res.status(429).json({ message: "Trop de requêtes, veuillez réessayer plus tard." });
+  }
 });
 
 // Middleware de caching pour GET /books
