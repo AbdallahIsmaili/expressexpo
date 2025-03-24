@@ -26,9 +26,9 @@ const limiter = rateLimit({
   headers: true, 
   keyGenerator: (req) => req.ip,
   handler: (req, res, next, options) => {
-    res.setHeader('Retry-After', new Date(Date.now() + options.windowMs).toUTCString());
+    res.setHeader('Retry-After', new Date(Date.now() + 10 * 1000).toUTCString());
     res.status(options.statusCode).json({ 
-      message: options.message 
+      message: "Trop de requêtes, veuillez réessayer plus tard."
     });
   }
 });
