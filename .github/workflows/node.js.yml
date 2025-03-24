@@ -32,7 +32,11 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
+    - name: Set up environment variables
+      run: echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> $GITHUB_ENV
+
     - name: Run tests
       run: npm test -- --detectOpenHandles
       env:
         MONGODB_URI: mongodb://localhost:27017/Library
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
