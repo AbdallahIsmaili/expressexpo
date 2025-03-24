@@ -14,9 +14,7 @@ jobs:
         image: mongo:6.0
         ports:
           - 27017:27017
-        # Désactive l'authentification pour correspondre à votre configuration locale
         options: >-
-          --noauth
           --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok'"
           --health-interval 10s
           --health-timeout 5s
