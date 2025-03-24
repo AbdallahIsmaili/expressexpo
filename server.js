@@ -28,6 +28,8 @@ app.use(bodyParser.json());
 
 app.use("/user", userRouter);
 
-app.use("/book", auth, bookRouter);
+app.use("/book", bookRouter);
 
-app.listen(PORT, () => console.log(`Library server is running in port:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`Library server is running in port:${PORT}`)
+);
