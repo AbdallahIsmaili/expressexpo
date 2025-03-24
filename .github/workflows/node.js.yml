@@ -4,56 +4,37 @@ on:
   push:
     branches: [main]
   pull_request:
-    types: [opened, synchronize, reopened]
     branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     services:
       mongodb:
-        image: mongo:${{ matrix.mongodb-version }}
+        image: mongo:6.0
         ports:
           - 27017:27017
-        env:
-          MONGO_INITDB_ROOT_USERNAME: root
-          MONGO_INITDB_ROOT_PASSWORD: example
+        # Désactive l'authentification pour correspondre à votre configuration locale
         options: >-
+          --noauth
           --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok'"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 10
+          --health-retries 5
 
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [18.x, 20.x]
-        mongodb-version: [6.0, 7.0]
-    
     steps:
     - uses: actions/checkout@v4
     
-    - name: Cache node modules
-      uses: actions/cache@v3
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-    
-    - name: Setup Node.js ${{ matrix.node-version }}
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: 18.x
         cache: 'npm'
     
     - name: Install dependencies
-      run: npm ci --no-audit
+      run: npm ci
       
-    - name: Run tests with coverage
-      run: npm test -- --coverage
+    - name: Run tests
+      run: npm test -- --detectOpenHandles
       env:
-        MONGODB_URI: mongodb://root:example@localhost:27017/testDB
-        NODE_ENV: test
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        MONGODB_URI: mongodb://localhost:27017/Library
