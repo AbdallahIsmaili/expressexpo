@@ -20,14 +20,16 @@ const redis = new Redis({
 
 // Middleware de limitation : max 5 requêtes toutes les 10 secondes par IP
 const limiter = rateLimit({
-  windowMs: 10 * 1000, // 10 secondes
-  max: 5, // 5 requêtes max
+  windowMs: 10 * 1000, 
+  max: 5, 
   message: "Trop de requêtes, veuillez réessayer plus tard.",
   headers: true, 
-  keyGenerator: (req) => req.ip, 
-  handler: (req, res, next) => {
-    res.setHeader('Retry-After', 10); 
-    res.status(429).json({ message: "Trop de requêtes, veuillez réessayer plus tard." });
+  keyGenerator: (req) => req.ip,
+  handler: (req, res, next, options) => {
+    res.setHeader('Retry-After', new Date(Date.now() + options.windowMs).toUTCString());
+    res.status(options.statusCode).json({ 
+      message: options.message 
+    });
   }
 });
 
