@@ -47,23 +47,31 @@ const updateBook = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 //function to get all books with pagination
 const getBooks = async (req, res) => {
   try {
+    console.log("Requête reçue avec query params :", req.query);
+
     const { page = 1, limit = 10 } = req.query;
     const books = await Book.find()
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
+
     const totalBooks = await Book.countDocuments();
+
     res.status(200).json({
       books,
       totalPages: Math.ceil(totalBooks / limit),
-      currentPage: page,
+      currentPage: parseInt(page),
     });
   } catch (error) {
+    console.error("Erreur dans getBooks :", error);
     res.status(500).json({ message: error.message });
   }
 };
+
+
 const deleteBook = async (req, res) => {
   try {
     const { id } = req.params;
