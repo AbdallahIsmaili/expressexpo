@@ -1,5 +1,4 @@
 const rateLimit = require("express-rate-limit");
-const Redis = require("ioredis");
 const {
   createBook,
   updateBook,
@@ -9,48 +8,44 @@ const {
 
 const router = require("express").Router();
 
-const redis = new Redis({
-  host: "127.0.0.1",
-  port: 6379,
-  reconnectOnError: (err) => {
-    console.error("Erreur de connexion à Redis :", err);
-    return true;
+const limiter = rateLimit({
+  windowMs: 30 * 1000, 
+  max: 5,
+  headers: true,
+  keyGenerator: (req) => req.ip,
+  handler: (req, res, next, options) => {
+    const now = Date.now();
+    const resetTime = req.rateLimit.resetTime; 
+    const retryAfter = Math.ceil((resetTime - now) / 1000);
+
+    res.setHeader("Retry-After", retryAfter);
+    res.setHeader("X-RateLimit-Reset", resetTime);
+
+    res.status(options.statusCode).json({
+      message: `Trop de requêtes. Veuillez réessayer dans ${retryAfter} secondes.`,
+      retryAfter: retryAfter,
+      resetTime: new Date(resetTime).toISOString(),
+    });
   },
 });
 
-// Middleware de limitation : max 5 requêtes toutes les 10 secondes par IP
-const limiter = rateLimit({
-  windowMs: 10 * 1000, 
-  max: 5, 
-  message: "Trop de requêtes, veuillez réessayer plus tard.",
-  headers: true, 
-  keyGenerator: (req) => req.ip,
-  handler: (req, res, next, options) => {
-    res.setHeader('Retry-After', new Date(Date.now() + 10 * 1000).toUTCString());
-    res.status(options.statusCode).json({ 
-      message: "Trop de requêtes, veuillez réessayer plus tard."
-    });
-  }
-});
+// Middleware de caching navigateur pour GET /books
+const browserCacheMiddleware = (req, res, next) => {
+  res.set("Cache-Control", "public, max-age=300, must-revalidate");
 
-// Middleware de caching pour GET /books
-const cacheMiddleware = async (req, res, next) => {
-  const cacheKey = `books:${req.query.page || 1}`;
-  try {
-    const cachedData = await redis.get(cacheKey);
-    if (cachedData) {
-      return res.json(JSON.parse(cachedData)); // Réponse depuis le cache
-    }
-    next(); // Passer au contrôleur si pas en cache
-  } catch (error) {
-    console.error("Erreur Redis :", error);
-    next(); // Continuer même si Redis échoue
-  }
+  next();
 };
 
-router.post("/create", limiter, createBook);
-router.put("/update/:id", limiter, updateBook);
-router.get("/", limiter, cacheMiddleware, getBooks);
-router.delete("/delete/:id", limiter, deleteBook);
+// Middleware pour supprimer le cache pour les méthodes qui modifient les données
+const noCacheMiddleware = (req, res, next) => {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+  next();
+};
+
+// Routes avec cache navigateur
+router.post("/create", limiter, noCacheMiddleware, createBook);
+router.put("/update/:id", limiter, noCacheMiddleware, updateBook);
+router.get("/", limiter, browserCacheMiddleware, getBooks);
+router.delete("/delete/:id", limiter, noCacheMiddleware, deleteBook);
 
 module.exports = router;
