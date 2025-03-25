@@ -1,20 +1,16 @@
 name: Node.js CI
-
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-
 jobs:
   test:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         node-version: [18.x]
         mongodb-version: [6.0]
-
     steps:
     - uses: actions/checkout@v3
     
@@ -36,3 +32,4 @@ jobs:
       run: npm test
       env:
         MONGODB_URI: mongodb://localhost:27017/testDB
+        JWT_SECRET: 64374fa9a73f1032ac5cb5af36421cc5e1045156971e07fcd85491057edfc172
