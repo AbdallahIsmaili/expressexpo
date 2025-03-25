@@ -15,6 +15,7 @@ jobs:
         ports:
           - 27017:27017
         options: >-
+          --noauth
           --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok'"
           --health-interval 10s
           --health-timeout 5s
@@ -28,15 +29,15 @@ jobs:
       with:
         node-version: 18.x
         cache: 'npm'
+
+    - name: Generate default SECRET_KEY
+      run: echo "SECRET_KEY=$(node -e 'console.log(require(\"crypto\").randomBytes(64).toString(\"hex\"))')" >> $GITHUB_ENV
     
     - name: Install dependencies
       run: npm ci
       
-    - name: Set up environment variables
-      run: echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> $GITHUB_ENV
-
     - name: Run tests
       run: npm test -- --detectOpenHandles
       env:
-        MONGODB_URI: mongodb://localhost:27017/Library
-        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        MONGODB_URI: mongodb://localhost:27017/TestLibrary
+        SECRET_KEY: ${{ secrets.SECRET_KEY || env.SECRET_KEY }}
