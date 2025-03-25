@@ -17,7 +17,7 @@
    ```bash
    npm start
    ```
-   or
+3. how to run tests
     ```bash
-   node server.js
+   npm run test
    ```

@@ -1,40 +1,38 @@
-name: Node.js CI/CD
+name: Node.js CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main, master ]
   pull_request:
-    branches: [main]
+    branches: [ main, master ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo:6.0
-        ports:
-          - 27017:27017
-        # Désactive l'authentification pour correspondre à votre configuration locale
-        options: >-
-          --noauth
-          --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+        mongodb-version: [6.0]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
     
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
       with:
-        node-version: 18.x
+        node-version: ${{ matrix.node-version }}
         cache: 'npm'
+    
+    - name: Start MongoDB
+      uses: supercharge/mongodb-github-action@1.10.0
+      with:
+        mongodb-version: ${{ matrix.mongodb-version }}
     
     - name: Install dependencies
       run: npm ci
       
     - name: Run tests
-      run: npm test -- --detectOpenHandles
+      run: npm test
       env:
-        MONGODB_URI: mongodb://localhost:27017/Library
+        MONGODB_URI: mongodb://localhost:27017/testDB

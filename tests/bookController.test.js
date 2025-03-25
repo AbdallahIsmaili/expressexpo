@@ -8,7 +8,6 @@ const {
 const Book = require("../Models/book");
 
 describe("Book Controller", () => {
-  // Configuration de la connexion MongoDB avec options modernes
   const connectOptions = {
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
@@ -74,7 +73,6 @@ describe("Book Controller", () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ message: "le livre est ajouté" });
 
-      // Vérification supplémentaire en base de données
       const bookInDB = await Book.findOne({ id: 1 });
       console.log("🔍 Livre créé en base de données:", bookInDB);
       expect(bookInDB).toBeTruthy();
@@ -87,7 +85,7 @@ describe("Book Controller", () => {
 
   test("update book", async () => {
     try {
-      // Créer un livre avant de le mettre à jour
+
       await Book.create({
         id: 1,
         title: "Original Book",
@@ -117,7 +115,6 @@ describe("Book Controller", () => {
         message: "le livre est modifie",
       });
 
-      // Vérification du livre mis à jour en base de données
       const updatedBook = await Book.findOne({ id: 1 });
       console.log("🔍 Livre mis à jour:", updatedBook);
       expect(updatedBook.title).toBe("Updated Book");
@@ -130,7 +127,6 @@ describe("Book Controller", () => {
 
   test("get books", async () => {
     try {
-      // Ajouter quelques livres pour le test
       await Book.create([
         {
           id: 1,
@@ -169,7 +165,6 @@ describe("Book Controller", () => {
         })
       );
 
-      // Logs supplémentaires pour les détails de la réponse
       const responseData = res.json.mock.calls[0][0];
       console.log("📊 Détails de la réponse de récupération:", {
         nombreLivres: responseData.books.length,
@@ -184,7 +179,7 @@ describe("Book Controller", () => {
 
   test("delete book", async () => {
     try {
-      // Créer un livre avant de le supprimer
+      
       await Book.create({
         id: 1,
         title: "Book to Delete",
@@ -210,7 +205,6 @@ describe("Book Controller", () => {
         message: "le livre est supprimé",
       });
 
-      // Vérification que le livre a été supprimé de la base de données
       const deletedBook = await Book.findOne({ id: 1 });
       console.log("🔍 Livre supprimé (doit être null):", deletedBook);
       expect(deletedBook).toBeNull();
