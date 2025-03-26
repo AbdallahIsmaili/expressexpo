@@ -72,6 +72,66 @@ const getBooks = async (req, res) => {
 };
 
 
+const getBooksByCursor = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const cursor = req.query.cursor ? parseInt(req.query.cursor) : null;
+
+    let query = {};
+    if (cursor) {
+      query = { published_year: { $gt: cursor } };
+    }
+
+    const books = await Book.find(query)
+      .sort({ published_year: 1 }) // Sort by publication year
+      .limit(limit + 1); // Get one extra to check for next page
+
+    const hasNextPage = books.length > limit;
+    if (hasNextPage) {
+      books.pop(); // Remove the extra item
+    }
+
+    const nextCursor = hasNextPage
+      ? books[books.length - 1].published_year
+      : null;
+
+    res.json({
+      data: books,
+      pagination: {
+        nextCursor,
+        hasNextPage,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+const getBooksByOffset = async (req, res) => {
+  try {
+    let { limit = 10, offset = 0 } = req.query;
+
+    limit = parseInt(limit);
+    offset = parseInt(offset);
+
+    const books = await Book.find().skip(offset).limit(limit);
+
+    const totalBooks = await Book.countDocuments();
+
+    res.status(200).json({
+      books,
+      totalBooks,
+      totalPages: Math.ceil(totalBooks / limit),
+      currentOffset: offset,
+    });
+  } catch (error) {
+    console.error("Error in offset pagination:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 const deleteBook = async (req, res) => {
   try {
     const { id } = req.params;
@@ -85,4 +145,11 @@ const deleteBook = async (req, res) => {
   }
 };
 
-module.exports = { createBook, updateBook, getBooks, deleteBook };
+module.exports = {
+  createBook,
+  updateBook,
+  getBooks,
+  deleteBook,
+  getBooksByCursor,
+  getBooksByOffset,
+};

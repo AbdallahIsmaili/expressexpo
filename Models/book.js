@@ -9,7 +9,8 @@ const bookSchema = new mongoose.Schema(
     genre: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
   },
-  { collection: "Book" }
+  { collection: "Book" },
+  { timestamps: true }
 );
 
 const Book = mongoose.model("Book", bookSchema);

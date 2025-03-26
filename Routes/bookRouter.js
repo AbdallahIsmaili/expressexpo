@@ -4,6 +4,8 @@ const {
   updateBook,
   deleteBook,
   getBooks,
+  getBooksByOffset,
+  getBooksByCursor,
 } = require("../Controllers/bookController");
 
 const router = require("express").Router();
@@ -46,6 +48,9 @@ const noCacheMiddleware = (req, res, next) => {
 router.post("/create", limiter, noCacheMiddleware, createBook);
 router.put("/update/:id", limiter, noCacheMiddleware, updateBook);
 router.get("/", limiter, browserCacheMiddleware, getBooks);
+router.get("/cursor", limiter, browserCacheMiddleware, getBooksByCursor);
+router.get("/offset", limiter, browserCacheMiddleware, getBooksByOffset);
+
 router.delete("/delete/:id", limiter, noCacheMiddleware, deleteBook);
 
 module.exports = router;
